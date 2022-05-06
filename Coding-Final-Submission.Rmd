@@ -1,0 +1,481 @@
+
+```{r}
+setwd("C:\\Users\\panch\\Documents\\MAR 664\\PAC")
+```
+#Loading Data
+```{r}
+data = read.csv("C:\\Users\\panch\\Documents\\MAR 664\\PAC\\analysisData.csv")
+scoringdata = read.csv("C:\\Users\\panch\\Documents\\MAR 664\\PAC\\scoringData.csv")
+```
+
+#Changing host_response_rate from charecter to integer
+```{r}
+
+library(readr) ; library(dplyr)
+
+data = data%>%
+  mutate(host_response_rate = parse_number(host_response_rate))
+
+scoringdata = scoringdata%>%
+  mutate(host_response_rate = parse_number(host_response_rate))
+
+```
+
+#Finding na cloumns in data and scoring data
+```{r}
+
+na = is.na(data)
+sumofna = colSums(is.na(data))
+colsumofna = colSums(is.na(data)) > 0
+namesofcolswithna = colnames(data)[colSums(is.na(data)) > 0]
+namesofcolswithna
+
+
+na = is.na(scoringdata)
+sumofna = colSums(is.na(scoringdata))
+colsumofna = colSums(is.na(scoringdata)) > 0
+namesofcolswithna = colnames(scoringdata)[colSums(is.na(scoringdata)) > 0]
+namesofcolswithna
+
+```
+#Replacing NA values with mean of the columns in data and scoringdata
+```{r}
+
+data[is.na(data$host_listings_count),]$host_listings_count <- mean(data$host_listings_count, na.rm = T)
+data[is.na(data$host_total_listings_count),]$host_total_listings_count <- mean(data$host_total_listings_count, na.rm = T)
+data[is.na(data$beds),]$beds <- mean(data$beds, na.rm = T)
+data[is.na(data$monthly_price),]$monthly_price <- mean(data$monthly_price, na.rm = T)
+data[is.na(data$security_deposit),]$security_deposit <- mean(data$security_deposit, na.rm = T)
+data[is.na(data$cleaning_fee),]$cleaning_fee <- mean(data$cleaning_fee, na.rm = T)
+data[is.na(data$reviews_per_month),]$reviews_per_month <- mean(data$reviews_per_month, na.rm = T)
+data[is.na(data$host_response_rate),]$host_response_rate <- mean(data$host_response_rate, na.rm = T)
+
+
+scoringdata[is.na(scoringdata$host_listings_count),]$host_listings_count <- mean(scoringdata$host_listings_count, na.rm = T)
+scoringdata[is.na(scoringdata$host_total_listings_count),]$host_total_listings_count <- mean(scoringdata$host_total_listings_count, na.rm = T)
+scoringdata[is.na(scoringdata$beds),]$beds <- mean(scoringdata$beds, na.rm = T)
+scoringdata[is.na(scoringdata$monthly_price),]$monthly_price <- mean(scoringdata$monthly_price, na.rm = T)
+scoringdata[is.na(scoringdata$security_deposit),]$security_deposit <- mean(scoringdata$security_deposit, na.rm = T)
+scoringdata[is.na(scoringdata$cleaning_fee),]$cleaning_fee <- mean(scoringdata$cleaning_fee, na.rm = T)
+scoringdata[is.na(scoringdata$host_response_rate),]$host_response_rate <- mean(scoringdata$host_response_rate, na.rm = T)
+```
+
+ 
+#Converting categorical variables which are important to numeric variables of data and scoringData 
+(#dont run this chunk)
+```{r}
+
+#data$instant_bookable = as.numeric(data$instant_bookable) 
+#data$host_identity_verified = as.numeric(data$host_identity_verified)
+#data$host_is_superhost = as.numeric(data$host_is_superhost)
+#data$is_location_exact = as.numeric(data$is_location_exact)
+
+#scoringdata$instant_bookable =as.numeric(scoringdata$instant_bookable)
+#scoringdata$host_identity_verified = as.numeric(scoringdata$host_identity_verified)
+#scoringdata$host_is_superhost = as.numeric(scoringdata$host_is_superhost)
+#scoringdata$is_location_exact = as.numeric(scoringdata$is_location_exact)
+
+#none are significantly correalted with price
+```
+
+#Converting categorical variables which are important to factor variables of data and scoringData
+```{r}
+
+data$room_type = as.factor(data$room_type)
+data$bed_type = as.factor(data$bed_type)
+data$property_type = as.factor(data$property_type)
+data$cancellation_policy = as.factor(data$cancellation_policy)
+data$neighbourhood_group_cleansed = as.factor(data$neighbourhood_group_cleansed)
+data$host_response_time = as.factor(data$host_response_time)
+data$neighbourhood = as.factor(data$neighbourhood)
+
+scoringdata$room_type = as.factor(scoringdata$room_type)
+scoringdata$bed_type = as.factor(scoringdata$bed_type)
+scoringdata$property_type = as.factor(scoringdata$property_type)
+scoringdata$cancellation_policy = as.factor(scoringdata$cancellation_policy)
+scoringdata$neighbourhood_group_cleansed = as.factor(scoringdata$neighbourhood_group_cleansed)
+scoringdata$host_response_time = as.factor(scoringdata$host_response_time)
+scoringdata$neighbourhood = as.factor(scoringdata$neighbourhood)
+```
+
+#Cleaning property_type
+```{r}
+
+data$property_type[!data$property_type=='Apartment'&!data$property_type=='House'&!data$property_type=='Loft'&!data$property_type=='Condominium'&!data$property_type=='Townhouse']<-'Other'
+scoringdata$property_type[!scoringdata$property_type=='Apartment'&!scoringdata$property_type=='House'&!scoringdata$property_type=='Loft'&!scoringdata$property_type=='Condominium'&!scoringdata$property_type=='Townhouse']<-'Other'
+
+data$property_type<-as.factor(data$property_type)
+scoringdata$property_type<-as.factor(scoringdata$property_type)
+scoringdata$property_type<-factor(scoringdata$property_type,levels=levels(data$property_type))
+
+levels_to_drop_property_type = c('Aparthotel',"Bed and breakfast", "Boat", "Boutique hotel" , "Bungalow", "Cabin" , "Camper/RV" , "Casa particular (Cuba)" , "Castle" , "Cave" , "Cottage" , "Dome house" , "Earth house" , "Guest suite" , "Guesthouse" , "Hostel" , "Hotel" , "Houseboat" , "Lighthouse" , "Resort" , "Serviced apartment" , "Tent" , "Tiny house","Treehouse" ,  "Villa")
+
+#removing empty levels
+data$property_type = (droplevels(data$property_type,exclude = levels_to_drop_property_type))
+scoringdata$property_type = (droplevels(scoringdata$property_type,exclude = levels_to_drop_property_type))
+
+```
+
+#Determining if the length of different string feilds are significant or not except for amenitites and host verifications
+```{r}
+
+data$Name_Length = nchar(data$name)
+data$Summary_Length = nchar(data$summary)
+data$Space_Length = nchar(data$space)
+data$Description_Length = nchar(data$description)
+data$Neighbourhood_Length = nchar(data$neighborhood_overview)
+data$Transit_Length = nchar(data$transit)
+data$Access_Length = nchar(data$access)
+data$Interaction_Length = nchar(data$interaction)
+data$HouseRules_Length = nchar(data$house_rules)
+data$HostAbout_Length = nchar(data$host_about)
+data$Notes_Length = nchar(data$notes)
+
+
+scoringdata$Name_Length = nchar(scoringdata$name)
+scoringdata$Summary_Length = nchar(scoringdata$summary)
+scoringdata$Space_Length = nchar(scoringdata$space)
+scoringdata$Description_Length = nchar(scoringdata$description)
+scoringdata$Neighbourhood_Length = nchar(scoringdata$neighborhood_overview)
+scoringdata$Transit_Length = nchar(scoringdata$transit)
+scoringdata$Access_Length = nchar(scoringdata$access)
+scoringdata$Interaction_Length = nchar(scoringdata$interaction)
+scoringdata$HouseRules_Length = nchar(scoringdata$house_rules)
+scoringdata$HostAbout_Length = nchar(scoringdata$host_about)
+scoringdata$Notes_Length = nchar(scoringdata$notes)
+
+
+```
+
+#Counting number of amenities in data and scoring data
+```{r}
+
+x = strsplit(as.character(data$amenities), ",")
+y = c()
+for (i in 1:length(x)){
+  y[i] = length(x[[i]])
+}
+data$num_amenities = y
+
+
+x1 = strsplit(as.character(scoringdata$amenities), ",")
+y1 = c()
+for (i in 1:length(x1)){
+  y1[i] = length(x1[[i]])
+}
+scoringdata$num_amenities = y1
+
+
+```
+
+# Using amenities to create variables and finding correlation between various amentities and price
+```{r}
+
+library(stringr)
+data$TV<-str_detect(data$amenities,'TV')
+scoringdata$TV<-str_detect(scoringdata$amenities,'TV')
+data$TV<-as.numeric(data$TV)
+scoringdata$TV<-as.numeric(scoringdata$TV)
+
+
+
+data$Cable_TV<-str_detect(data$amenities,'Cable TV')
+scoringdata$Cable_TV<-str_detect(scoringdata$amenities,'Cable TV')
+data$Cable_TV<-as.numeric(data$Cable_TV)
+scoringdata$Cable_TV<-as.numeric(scoringdata$Cable_TV)
+
+
+data$Air_conditioning<-str_detect(data$amenities,'Air conditioning')
+scoringdata$Air_conditioning<-str_detect(scoringdata$amenities,'Air conditioning')
+data$Air_conditioning<-as.numeric(data$Air_conditioning)
+scoringdata$Air_conditioning<-as.numeric(scoringdata$Air_conditioning)
+
+data$Paid_parking_off_premises<-str_detect(data$amenities,'Paid parking off premises')
+scoringdata$Paid_parking_off_premises<-str_detect(scoringdata$amenities,'Paid parking off premises')
+data$Paid_parking_off_premises<-as.numeric(data$Paid_parking_off_premises)
+scoringdata$Paid_parking_off_premises<-as.numeric(scoringdata$Paid_parking_off_premises)
+
+data$Elevator<-str_detect(data$amenities,'Elevator')
+scoringdata$Elevator<-str_detect(scoringdata$amenities,'Elevator')
+data$Elevator<-as.numeric(data$Elevator)
+scoringdata$Elevator<-as.numeric(scoringdata$Elevator)
+
+data$Washer<-str_detect(data$amenities,'Washer')
+scoringdata$Washer<-str_detect(scoringdata$amenities,'Washer')
+data$Washer<-as.numeric(data$Washer)
+scoringdata$Washer<-as.numeric(scoringdata$Washer)
+
+data$Dryer<-str_detect(data$amenities,'Dryer')
+scoringdata$Dryer<-str_detect(scoringdata$amenities,'Dryer')
+data$Dryer<-as.numeric(data$Dryer)
+scoringdata$Dryer<-as.numeric(scoringdata$Dryer)
+
+data$Hair_dryer<-str_detect(data$amenities,'Hair dryer')
+scoringdata$Hair_dryer<-str_detect(scoringdata$amenities,'Hair dryer')
+data$Hair_dryer<-as.numeric(data$Hair_dryer)
+scoringdata$Hair_dryer<-as.numeric(scoringdata$Hair_dryer)
+
+data$Iron<-str_detect(data$amenities,'Iron')
+scoringdata$Iron<-str_detect(scoringdata$amenities,'Iron')
+data$Iron<-as.numeric(data$Iron)
+scoringdata$Iron<-as.numeric(scoringdata$Iron)
+
+data$Laptop_friendly_workspace<-str_detect(data$amenities,'Laptop friendly workspace')
+scoringdata$Laptop_friendly_workspace<-str_detect(scoringdata$amenities,'Laptop friendly workspace')
+data$Laptop_friendly_workspace<-as.numeric(data$Laptop_friendly_workspace)
+scoringdata$Laptop_friendly_workspace<-as.numeric(scoringdata$Laptop_friendly_workspace)
+
+data$Dishwasher<-str_detect(data$amenities,'Dishwasher')
+scoringdata$Dishwasher<-str_detect(scoringdata$amenities,'Dishwasher')
+data$Dishwasher<-as.numeric(data$Dishwasher)
+scoringdata$Dishwasher<-as.numeric(scoringdata$Dishwasher)
+
+data$Bathtub<-str_detect(data$amenities,'Bathtub')
+scoringdata$Bathtub<-str_detect(scoringdata$amenities,'Bathtub')
+data$Bathtub<-as.numeric(data$Bathtub)
+scoringdata$Bathtub<-as.numeric(scoringdata$Bathtub)
+
+```
+
+#Cleaning host verifications
+```{r}
+
+#removed the initial and final [] dont run this code twice 
+data$host_verifications = (str_sub(data$host_verifications,2,−2))
+scoringdata$host_verifications = (str_sub(scoringdata$host_verifications,2,−2))
+
+data$host_verifications = gsub("'",'',data$host_verifications )
+scoringdata$host_verifications = gsub("'",'',scoringdata$host_verifications )
+
+a = strsplit(as.character(data$host_verifications), ",")
+b = c()
+for (i in 1:length(a)){
+  b[i] = length(a[[i]])
+}
+
+data$num_host_verifications = b
+
+
+
+a1 = strsplit(as.character(scoringdata$host_verifications), ",")
+b1 = c()
+for (i in 1:length(a1)){
+  b1[i] = length(a1[[i]])
+}
+scoringdata$num_host_verifications = b1
+
+#no point in exporing as cor is 0.0074
+```
+
+#Finding correlation of all numeric variables with price 
+```{r}
+
+numericVars <- which(sapply(data, is.numeric))
+data_numVar <- data[,numericVars]
+cor_numVar <- cor(data_numVar)
+cor_sorted <- as.matrix(sort(cor_numVar[,'price'], decreasing = TRUE))
+
+(cor_sorted) 
+
+#all numeric variables with digits starting from second decimal are to be considered
+```
+
+#Stating the column types in the data
+```{r}
+
+
+NumericVars <- which(sapply(data, is.numeric)) #index vector numeric variables
+FactorVars <- which(sapply(data, is.factor)) #index vector factor variables
+CharacterVars <- which(sapply(data, is.character)) #index vector character variables
+
+cat('There are', length(NumericVars), 'numeric variables, and', length(FactorVars), 'factor variables, and',length(CharacterVars),'character variables')
+```
+#Subsetting data and scoring data to make models
+```{r}
+
+DATA = subset(data , select = c(price,accommodates,cleaning_fee,beds,bedrooms,guests_included,bathrooms,TV,security_deposit,Dryer,Washer,Dishwasher,Cable_TV,Elevator,num_amenities,Air_conditioning,review_scores_location,Space_Length,Hair_dryer,calculated_host_listings_count_entire_homes,Iron,Paid_parking_off_premises,Laptop_friendly_workspace,Bathtub,extra_people,calculated_host_listings_count,host_listings_count,host_total_listings_count,availability_30,availability_365,Name_Length,review_scores_cleanliness,availability_60,review_scores_rating,Description_Length,availability_90,Neighbourhood_Length,Summary_Length,Notes_Length,HouseRules_Length,maximum_minimum_nights,review_scores_accuracy,minimum_nights_avg_ntm,review_scores_communication,review_scores_checkin,num_host_verifications,minimum_nights,minimum_minimum_nights,monthly_price,calculated_host_listings_count_private_rooms,property_type,room_type,bed_type,cancellation_policy,review_scores_value,HostAbout_Length,reviews_per_month,number_of_reviews,Access_Length,number_of_reviews_ltm,Interaction_Length,calculated_host_listings_count_shared_rooms))
+
+SCORINGDATA = subset(scoringdata,select=c(accommodates,cleaning_fee,beds,bedrooms,guests_included,bathrooms,TV,security_deposit,Dryer,Washer,Dishwasher,Cable_TV,Elevator,num_amenities,Air_conditioning,review_scores_location,Space_Length,Hair_dryer,calculated_host_listings_count_entire_homes,Iron,Paid_parking_off_premises,Laptop_friendly_workspace,Bathtub,extra_people,calculated_host_listings_count,host_listings_count,host_total_listings_count,availability_30,availability_365,Name_Length,review_scores_cleanliness,availability_60,review_scores_rating,Description_Length,availability_90,Neighbourhood_Length,Summary_Length,Notes_Length,HouseRules_Length,maximum_minimum_nights,review_scores_accuracy,minimum_nights_avg_ntm,review_scores_communication,review_scores_checkin,num_host_verifications,minimum_nights,minimum_minimum_nights,monthly_price,calculated_host_listings_count_private_rooms,property_type,room_type,bed_type,cancellation_policy,review_scores_value,HostAbout_Length,reviews_per_month,number_of_reviews,Access_Length,number_of_reviews_ltm,Interaction_Length,calculated_host_listings_count_shared_rooms))
+SCORINGDATA$price = NA
+
+```
+
+#Splitting the data into test and train
+```{r}
+
+library(caret)
+set.seed(817)
+split<-createDataPartition(DATA$price,p = 0.8,list=FALSE,groups = 100)
+train<-DATA[split,]
+test<-DATA[-split,]
+
+```
+
+#Best linear regression
+```{r}
+
+model_lm = lm(price ~ . , train)
+
+pred_lm_train = predict(model_lm)
+rmse_lm_train = sqrt(mean((pred_lm_train - train$price)^2)) # 71.75529
+
+pred_lm = predict(model_lm , newdata = test)
+rmse_lm_test = sqrt(mean((pred_lm - test$price)^2)) #71.37698
+
+#pred_lm_SCORING = predict(model_lm , newdata = SCORINGDATA_1) 
+
+rmse_lm_train ; rmse_lm_test
+
+#(test rmse : 72.04294 , rmse after uploading : 71.58581)
+```
+
+#Best logistic regression
+```{r}
+
+model_glm = glm(price ~ ., train , family = 'poisson')
+
+pred_glm_train = predict(model_glm, type='response')
+rmse_glm_train = sqrt(mean((pred_glm_train - train$price)^2)) #70.82915
+
+pred_glm_test = predict(model_glm , newdata = test , type = 'response')
+rmse_glm_test = sqrt(mean((pred_glm_test - test$price)^2)) #71.19982
+
+#pred_glm_SCORING = predict(model_lm , newdata = SCORINGDATA , type = 'response')
+
+rmse_glm_train ; rmse_glm_test
+
+#(test rmse : 70.13889 , rmse after uploading : 69.96191)
+```
+
+#Best tree selection
+```{r}
+
+library(rpart)
+
+model_tree = rpart(price ~ . , train , method ='anova', control = rpart.control(cp = 4e-04))
+
+pred_tree_train = predict(model_tree)
+rmse_tree_train = sqrt(mean((pred_tree_train - train$price)^2)) #65.26914
+
+pred_tree_test = predict(model_tree , newdata = test)
+rmse_tree_test = sqrt(mean((pred_tree_test - test$price)^2)) #68.48148
+
+#pred_tree_SCORING = predict(model_tree , newdata = SCORINGDATA)
+
+rmse_tree_train ; rmse_tree_test
+
+#(test rmse : 76.89933 , rmse after uploading : 69.96191)
+```
+#Adding zipcode and neighbourhood to the subset as it was causing error in linear , logistic and tree modelling
+```{r}
+
+DATA = subset(data , select =c(price,accommodates,cleaning_fee,beds,bedrooms,guests_included,bathrooms,TV,security_deposit,Dryer,Washer,Dishwasher,Cable_TV,Elevator,num_amenities,Air_conditioning,review_scores_location,Space_Length,Hair_dryer,calculated_host_listings_count_entire_homes,Iron,Paid_parking_off_premises,Laptop_friendly_workspace,Bathtub,extra_people,calculated_host_listings_count,host_listings_count,host_total_listings_count,availability_30,availability_365,Name_Length,review_scores_cleanliness,availability_60,review_scores_rating,Description_Length,availability_90,Neighbourhood_Length,Summary_Length,Notes_Length,HouseRules_Length,maximum_minimum_nights,review_scores_accuracy,minimum_nights_avg_ntm,review_scores_communication,review_scores_checkin,num_host_verifications,minimum_nights,minimum_minimum_nights,monthly_price,calculated_host_listings_count_private_rooms,neighbourhood,property_type,room_type,bed_type,cancellation_policy,review_scores_value,HostAbout_Length,reviews_per_month,number_of_reviews,Access_Length,number_of_reviews_ltm,Interaction_Length,calculated_host_listings_count_shared_rooms,zipcode))
+
+
+SCORINGDATA = subset(scoringdata,select=c(accommodates,cleaning_fee,beds,bedrooms,guests_included,bathrooms,TV,security_deposit,Dryer,Washer,Dishwasher,Cable_TV,Elevator,num_amenities,Air_conditioning,review_scores_location,Space_Length,Hair_dryer,calculated_host_listings_count_entire_homes,Iron,Paid_parking_off_premises,Laptop_friendly_workspace,Bathtub,extra_people,calculated_host_listings_count,host_listings_count,host_total_listings_count,availability_30,availability_365,Name_Length,review_scores_cleanliness,availability_60,review_scores_rating,Description_Length,availability_90,Neighbourhood_Length,Summary_Length,Notes_Length,HouseRules_Length,maximum_minimum_nights,review_scores_accuracy,minimum_nights_avg_ntm,review_scores_communication,review_scores_checkin,num_host_verifications,minimum_nights,minimum_minimum_nights,monthly_price,calculated_host_listings_count_private_rooms,neighbourhood,property_type,room_type,bed_type,cancellation_policy,review_scores_value,HostAbout_Length,reviews_per_month,number_of_reviews,Access_Length,number_of_reviews_ltm,Interaction_Length,calculated_host_listings_count_shared_rooms,zipcode))
+SCORINGDATA$price = NA
+
+```
+
+
+#Splitting the data into test and train after adding zipcode and neighbourhood
+```{r}
+ 
+
+library(caret)
+set.seed(817)
+split<-createDataPartition(DATA$price,p = 0.8,list=FALSE,groups = 100)
+train<-DATA[split,]
+test<-DATA[-split,]
+
+```
+
+#Best ranger model
+```{r}
+ 
+library(ranger)
+set.seed(817)
+ranger = ranger(price~.,
+                       data = train, 
+                       num.trees = 1000)
+
+pred_ranger_train = predict(ranger, data = train, num.trees = 1000)
+rmse_ranger_train = sqrt(mean((pred_ranger_train$predictions - train$price)^2))
+
+
+pred_ranger_test = predict(ranger , test , num.trees = 1000)
+rmse_ranger_test = sqrt(mean((pred_ranger_test$predictions - test$price)^2))
+
+#pred_ranger_SCORING = predict(ranger , newdata = SCORINGDATA , num.trees = 1000)
+
+rmse_ranger_train ; rmse_ranger_test
+
+#(test rmse = 61.97403, rmse after uploading = 64.05388)
+```
+
+#Preparing data in a matrix format to feed in the XGboost model
+```{r}
+
+#install.packages("vtreat")
+library(vtreat)
+trt = designTreatmentsZ(dframe = train,
+                        varlist = names(train)[2:64])
+
+newvars = trt$scoreFrame[trt$scoreFrame$code%in% c('clean','lev'),'varName']
+
+train_input = prepare(treatmentplan = trt, 
+                      dframe = train,
+                      varRestriction = newvars)
+
+test_input = prepare(treatmentplan = trt, 
+                     dframe = test,
+                     varRestriction = newvars)
+
+SCORING_input = prepare(treatmentplan = trt, 
+                     dframe = SCORINGDATA,
+                     varRestriction = newvars)
+```
+
+#Best XGboost model  
+```{r}
+
+library(xgboost)
+set.seed(817)
+xgboost12 <- xgboost(data = as.matrix(train_input), 
+               label = train$price, 
+               eta = 0.01,gamma=0,
+               max_depth = 6,
+               nround=6000, 
+               objective="reg:squarederror",
+               early_stopping_rounds=50,
+               print_every_n=1000,
+               subsample = 0.5,
+               )
+
+
+pred_xgb12_train = predict(xgboost12 , newdata = as.matrix(train_input))
+rmse_xgb12_train = sqrt(mean((pred_xgb12_train - train$price)^2))
+
+pred_xgb12_test = predict(xgboost12 , newdata = as.matrix(test_input))
+rmse_xgb12_test = sqrt(mean((pred_xgb12_test - test$price)^2))
+
+rmse_xgb12_train ; rmse_xgb12_test
+
+#(test rmse : 57.7555, rmse after uploading = 54.51000, private rmse  = 60.28871)
+
+```
+
+#Forming final submission file
+```{r}
+
+pred_xgb12_SCORING = predict(xgboost12 , newdata = as.matrix(SCORING_input))
+
+ID = scoringdata$id
+PRICE = pred_xgb12_SCORING
+file = data.frame(ID , PRICE)      
+
+sub1 = write.csv(x = file , file = 'Submission_05_01_2022_4.csv' , row.names = F)
+```
+
+
+
